@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/hu_dates.dart';
 import '../../../shared/widgets/dialogs.dart';
+import '../application/measurements_controller.dart';
 import '../application/profile_controller.dart';
+import '../domain/measurement.dart';
 import '../domain/user_profile.dart';
 import 'profile_sections.dart';
 import 'profile_wizard_screen.dart';
@@ -15,6 +18,17 @@ class ProfileDetailsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
+    // A legutóbbi mérés, amelyben van testsúly (az Alapadatok kártyára).
+    final Measurement? latestWeight = ref.watch(measurementsProvider).maybeWhen(
+          data: (measurements) {
+            for (final measurement in measurements) {
+              if (measurement.weightKg != null) return measurement;
+            }
+            return null;
+          },
+          orElse: () => null,
+        );
 
     return ref.watch(profileProvider).when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -41,7 +55,13 @@ class ProfileDetailsView extends ConsumerWidget {
                   const SizedBox(height: 12),
                 ],
                 for (final section in sections) ...[
-                  _SectionCard(section: section, profile: profile),
+                  _SectionCard(
+                    section: section,
+                    profile: profile,
+                    latestWeight: section == ProfileSection.basics
+                        ? latestWeight
+                        : null,
+                  ),
                   const SizedBox(height: 12),
                 ],
                 _ResponseStyleCard(profile: profile),
@@ -54,10 +74,17 @@ class ProfileDetailsView extends ConsumerWidget {
 
 /// Egy szakasz kártyája. Koppintásra megnyílik a szerkesztőoldal.
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.section, required this.profile});
+  const _SectionCard({
+    required this.section,
+    required this.profile,
+    this.latestWeight,
+  });
 
   final ProfileSection section;
   final UserProfile profile;
+
+  /// A legutóbbi testsúlyt tartalmazó mérés (csak az Alapadatoknál).
+  final Measurement? latestWeight;
 
   void _open(BuildContext context) {
     Navigator.of(context).push(
@@ -152,9 +179,62 @@ class _SectionCard extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 32),
                 child: body,
               ),
+              if (latestWeight != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 32, top: 10),
+                  child: _WeightLine(measurement: latestWeight!),
+                ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A legutóbbi testsúly a mérésekből, a mérés dátumával.
+/// Itt nem szerkeszthető: mindig a Mérések fülről jön.
+class _WeightLine extends StatelessWidget {
+  const _WeightLine({required this.measurement});
+
+  final Measurement measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final weight =
+        measurement.weightKg!.toStringAsFixed(1).replaceAll('.', ',');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.monitor_weight_outlined, size: 18, color: scheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$weight kg',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text: ' · a ${huShortDateAdjective(measurement.date)} '
+                        'mérésből',
+                    style: TextStyle(color: scheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
       ),
     );
   }

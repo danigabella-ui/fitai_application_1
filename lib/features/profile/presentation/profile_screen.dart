@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/gradient_header.dart';
 import '../../settings/application/backup_status_controller.dart';
 import '../../settings/presentation/settings_screen.dart';
+import 'measurements_view.dart';
 import 'profile_details_view.dart';
 
 enum _ProfileView { details, measurements }
@@ -74,12 +74,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Expanded(
             child: switch (_view) {
               _ProfileView.details => const ProfileDetailsView(),
-              _ProfileView.measurements => const EmptyState(
-                  icon: Icons.straighten,
-                  title: 'Itt lesznek a méréseid',
-                  message: 'Testsúly és körméretek dátummal, idősorosan. '
-                      'Hamarosan érkezik.',
-                ),
+              _ProfileView.measurements => const MeasurementsView(),
             },
           ),
         ],

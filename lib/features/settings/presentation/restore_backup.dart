@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/files/file_service.dart';
 import '../../../core/utils/hu_dates.dart';
 import '../../../shared/widgets/dialogs.dart';
+import '../../profile/application/measurements_controller.dart';
 import '../../profile/application/profile_controller.dart';
 import '../data/backup_repository.dart';
 
@@ -76,6 +77,7 @@ Future<bool> restoreBackupFromFile(
 
   // A képernyők újraolvassák a visszaállított adatokat.
   container.invalidate(profileProvider);
+  container.invalidate(measurementsProvider);
 
   showMessageWith(messenger, 'A mentés visszaállítva.');
   return true;

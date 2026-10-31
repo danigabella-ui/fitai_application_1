@@ -35,6 +35,13 @@ String huLongDate(DateTime date) {
   return '$capitalized, ${_months[date.month - 1]} ${date.day}.';
 }
 
+/// Pl. "szombat"
+String huWeekday(DateTime date) => _weekdays[date.weekday - 1];
+
+/// Pl. "2026. 10. 31-i" (melléknévként: "a 2026. 10. 31-i mérés")
+String huShortDateAdjective(DateTime date) =>
+    '${date.year}. ${_two(date.month)}. ${_two(date.day)}-i';
+
 /// Pl. "2027. február 28."
 String huFullDate(DateTime date) =>
     '${date.year}. ${_months[date.month - 1]} ${date.day}.';
