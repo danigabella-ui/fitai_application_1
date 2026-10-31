@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/files/file_service.dart';
+import '../../../core/utils/hu_dates.dart';
+import '../../../shared/widgets/app_background.dart';
 import '../application/api_key_controller.dart';
+import '../application/backup_status_controller.dart';
 import '../data/backup_repository.dart';
 
 /// Beállítások: Gemini API-kulcs, valamint mentés és visszaállítás.
@@ -108,10 +111,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _saveFile(String fileName, String content) {
-    shareOrDownloadTextFile(fileName: fileName, content: content)
-        .catchError((Object error) {
+    // A mentést azonnal, a gombnyomáson belül kell elindítani.
+    final saving = shareOrDownloadTextFile(
+      fileName: fileName,
+      content: content,
+    );
+    _finishSave(saving);
+  }
+
+  Future<void> _finishSave(Future<bool> saving) async {
+    bool saved;
+    try {
+      saved = await saving;
+    } catch (error) {
       if (mounted) _showMessage('Nem sikerült menteni a fájlt: $error');
-    });
+      return;
+    }
+    if (!saved || !mounted) return;
+
+    await ref.read(backupStatusProvider.notifier).markBackedUp();
+    if (mounted) _showMessage('A mentés elkészült.');
   }
 
   Future<void> _restoreBackup() async {
@@ -139,7 +158,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final date = backup.exportedAt == null
         ? 'ismeretlen'
-        : _displayDate(backup.exportedAt!);
+        : huDateTime(backup.exportedAt!);
     final hasProfile = backup.countOf('profile') > 0;
 
     final confirmed = await _confirm(
@@ -205,16 +224,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
-  static String _two(int n) => n.toString().padLeft(2, '0');
-
   static String _fileDate(DateTime d) =>
-      '${d.year}-${_two(d.month)}-${_two(d.day)}';
-
-  static String _displayDate(DateTime d) {
-    final local = d.toLocal();
-    return '${local.year}. ${_two(local.month)}. ${_two(local.day)}. '
-        '${_two(local.hour)}:${_two(local.minute)}';
-  }
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 
   // ---------------------------------------------------------------------------
   // Felület
@@ -227,9 +239,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Beállítások')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: AppBackground(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
           _SectionHeader(
             title: 'Gemini API-kulcs',
             description: 'Az AI ezzel a kulccsal éri el a Geminit. '
@@ -255,6 +268,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'menteni, például hetente.',
           ),
           const SizedBox(height: 16),
+          ref.watch(backupStatusProvider).maybeWhen(
+                data: (status) => _BackupStatusView(
+                  status: status,
+                  formatDate: huDateTime,
+                ),
+                orElse: () => const SizedBox.shrink(),
+              ),
+          const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: _busy ? null : _prepareBackup,
             icon: const Icon(Icons.save_alt),
@@ -266,7 +287,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             icon: const Icon(Icons.restore),
             label: const Text('Visszaállítás fájlból'),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -319,6 +341,77 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           onPressed: _busy ? null : _deleteKey,
           child: const Text('Törlés'),
         ),
+      ),
+    );
+  }
+}
+
+/// Az utolsó mentés ideje, és figyelmeztetés, ha régen volt.
+class _BackupStatusView extends StatelessWidget {
+  const _BackupStatusView({required this.status, required this.formatDate});
+
+  final BackupStatus status;
+  final String Function(DateTime) formatDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final last = status.lastBackupAt;
+    final days = status.daysSinceBackup;
+
+    final String text;
+    if (last == null) {
+      text = 'Még nem készült mentés.';
+    } else {
+      final ago = days == 0 ? 'ma' : '$days napja';
+      text = 'Utolsó mentés: ${formatDate(last)} ($ago)';
+    }
+
+    if (!status.isOverdue) {
+      return Text(text, style: theme.textTheme.bodyMedium);
+    }
+
+    final warning = last == null
+        ? 'Még nem mentetted az adataidat. Készíts egy mentést.'
+        : 'Több mint $backupReminderDays napja nem mentettél. '
+            'Készíts egy friss mentést.';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: theme.colorScheme.onErrorContainer,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  warning,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onErrorContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  text,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onErrorContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

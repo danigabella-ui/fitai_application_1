@@ -38,6 +38,9 @@ dependencies:
   sembast: ^3.9.0
   sembast_web: ^2.4.6+1
   web: ^1.1.2
+  google_fonts: ^9.0.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

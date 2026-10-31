@@ -16,7 +16,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(database!)],
-        child: const FitAiApp(),
+        child: const FitAgentApp(),
       ),
     );
 

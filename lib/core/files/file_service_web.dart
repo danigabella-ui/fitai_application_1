@@ -9,9 +9,12 @@ import 'package:web/web.dart' as web;
 /// Telefonon a megosztás menüt nyitja meg (ott választható a "Mentés a
 /// Fájlokba"), számítógépen egyszerűen letölti a fájlt.
 ///
+/// Igazat ad vissza, ha a fájl mentése megtörtént, hamisat, ha a
+/// felhasználó bezárta a menüt.
+///
 /// Fontos: közvetlenül egy gombnyomásból kell meghívni, mert az iPhone
 /// csak felhasználói művelet után engedi megnyitni a megosztás menüt.
-Future<void> shareOrDownloadTextFile({
+Future<bool> shareOrDownloadTextFile({
   required String fileName,
   required String content,
 }) async {
@@ -38,16 +41,17 @@ Future<void> shareOrDownloadTextFile({
     if (canShare) {
       try {
         await navigator.share(shareData).toDart;
-        return;
+        return true;
       } catch (error) {
         // Ha a felhasználó bezárta a menüt, nincs teendő.
-        if (error.toString().contains('AbortError')) return;
+        if (error.toString().contains('AbortError')) return false;
         // Bármilyen más hiba esetén letöltéssel próbálkozunk.
       }
     }
   }
 
   _download(bytes, fileName);
+  return true;
 }
 
 void _download(Uint8List bytes, String fileName) {

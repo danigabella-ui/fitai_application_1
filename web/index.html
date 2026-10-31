@@ -15,17 +15,138 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="FitAI">
+  <meta name="apple-mobile-web-app-title" content="FitAgent">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- A böngészőfül színe és ikonja -->
-  <meta name="theme-color" content="#3D5A80">
+  <!-- A böngésző sávjának színe világos és sötét módban -->
+  <meta name="theme-color" content="#F7F7F9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141417" media="(prefers-color-scheme: dark)">
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>FitAI</title>
+  <title>FitAgent</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- A betöltőképernyő felirata ugyanazzal a betűvel, mint az app címei -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap">
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #F7F7F9;
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #141417; }
+    }
+
+    /* ---------- Betöltőképernyő ---------- */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(150deg, #7D1E8C, #3E1F8A);
+      transition: opacity 0.3s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+
+    /* Halvány derengés a bal felső részen */
+    #loader .glow {
+      position: absolute;
+      top: -20%; left: -30%;
+      width: 130%; height: 70%;
+      background: radial-gradient(circle at 35% 45%,
+        rgba(233, 166, 245, 0.30), rgba(233, 166, 245, 0) 62%);
+    }
+    /* Szemcsés textúra */
+    #loader .grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.10;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    #loader .name {
+      position: relative;
+      margin: 0 0 34px;
+      font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #FFFFFF;
+    }
+
+    /* A pálya: a vonal mögött a futó által "megtett" rész fehérre telik */
+    #loader .track { position: relative; width: 200px; height: 48px; }
+    #loader .line, #loader .fill {
+      position: absolute; left: 0; bottom: 0; height: 3px; border-radius: 2px;
+    }
+    #loader .line { right: 0; background: rgba(255, 255, 255, 0.28); }
+    #loader .fill { background: #FFFFFF; animation: fa-fill 2.6s linear infinite; }
+    #loader .runner {
+      position: absolute; bottom: -2px; width: 46px; height: 46px; margin-left: -23px;
+      animation: fa-move 2.6s linear infinite;
+    }
+    @keyframes fa-fill { from { width: 0; } to { width: 100%; } }
+    @keyframes fa-move { from { left: 0; } to { left: 100%; } }
+
+    /* A futó mozgása: ízületenként forgatott végtagok */
+    #loader .runner * { transform-box: view-box; }
+    #loader .bob { animation: fa-bob 0.32s ease-in-out infinite; }
+    #loader .thA, #loader .thB { transform-origin: 47px 55px; animation: fa-thigh 0.64s linear infinite; }
+    #loader .shA, #loader .shB { transform-origin: 47px 73px; animation: fa-shin 0.64s linear infinite; }
+    #loader .arA, #loader .arB { transform-origin: 55px 32px; animation: fa-arm 0.64s ease-in-out infinite; }
+    #loader .faA, #loader .faB { transform-origin: 55px 45px; animation: fa-fore 0.64s ease-in-out infinite; }
+    #loader .thB, #loader .shB, #loader .arB, #loader .faB { animation-delay: -0.32s; }
+    @keyframes fa-bob   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+    @keyframes fa-thigh { 0% { transform: rotate(-45deg); } 50% { transform: rotate(38deg); } 100% { transform: rotate(-45deg); } }
+    @keyframes fa-shin  { 0% { transform: rotate(40deg); } 25% { transform: rotate(18deg); } 50% { transform: rotate(22deg); } 72% { transform: rotate(105deg); } 100% { transform: rotate(40deg); } }
+    @keyframes fa-arm   { 0% { transform: rotate(48deg); } 50% { transform: rotate(-58deg); } 100% { transform: rotate(48deg); } }
+    @keyframes fa-fore  { 0% { transform: rotate(-70deg); } 50% { transform: rotate(-105deg); } 100% { transform: rotate(-70deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      #loader .fill, #loader .runner, #loader .runner * { animation-duration: 6s !important; }
+    }
+  </style>
 </head>
 <body>
+  <div id="loader" role="status" aria-label="Az app betöltődik">
+    <div class="glow"></div>
+    <div class="grain"></div>
+    <div class="name">FitAgent</div>
+    <div class="track">
+      <div class="line"></div>
+      <div class="fill"></div>
+      <svg class="runner" viewBox="0 0 100 100" aria-hidden="true">
+        <g class="bob" stroke="#FFFFFF" stroke-linecap="round">
+          <g opacity="0.55">
+            <g class="arB"><line x1="55" y1="32" x2="55" y2="45" stroke-width="7.2"/><g class="faB"><line x1="55" y1="45" x2="55" y2="56" stroke-width="6"/></g></g>
+            <g class="thB"><line x1="47" y1="55" x2="47" y2="73" stroke-width="9.2"/><g class="shB"><line x1="47" y1="73" x2="47" y2="91" stroke-width="7.2"/><line x1="47" y1="91" x2="53" y2="92" stroke-width="5.6"/></g></g>
+          </g>
+          <line x1="56" y1="28" x2="47" y2="55" stroke-width="10.5"/>
+          <circle cx="60.5" cy="16.5" r="8.6" fill="#FFFFFF" stroke="none"/>
+          <g class="thA"><line x1="47" y1="55" x2="47" y2="73" stroke-width="9.2"/><g class="shA"><line x1="47" y1="73" x2="47" y2="91" stroke-width="7.2"/><line x1="47" y1="91" x2="53" y2="92" stroke-width="5.6"/></g></g>
+          <g class="arA"><line x1="55" y1="32" x2="55" y2="45" stroke-width="7.2"/><g class="faA"><line x1="55" y1="45" x2="55" y2="56" stroke-width="6"/></g></g>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    // Amikor az app első képe megjelenik, a betöltőképernyő elhalványul.
+    window.addEventListener('flutter-first-frame', function () {
+      var loader = document.getElementById('loader');
+      if (!loader) return;
+      loader.classList.add('hidden');
+      setTimeout(function () { loader.remove(); }, 350);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -1,14 +1,14 @@
 {
-    "name": "FitAI",
-    "short_name": "FitAI",
+    "name": "FitAgent",
+    "short_name": "FitAgent",
     "description": "Adatalapú AI fitnesz- és étrend-asszisztens.",
     "lang": "hu",
     "start_url": ".",
     "scope": ".",
     "display": "standalone",
     "orientation": "portrait-primary",
-    "background_color": "#3D5A80",
-    "theme_color": "#3D5A80",
+    "background_color": "#3E1F8A",
+    "theme_color": "#7D1E8C",
     "prefer_related_applications": false,
     "icons": [
         {

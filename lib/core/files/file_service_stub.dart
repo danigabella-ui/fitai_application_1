@@ -1,7 +1,7 @@
 /// Helyettesítő a nem webes környezetekhez (pl. tesztek).
 library;
 
-Future<void> shareOrDownloadTextFile({
+Future<bool> shareOrDownloadTextFile({
   required String fileName,
   required String content,
 }) async {

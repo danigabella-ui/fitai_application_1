@@ -18,7 +18,7 @@ Future<void> main() async {
       overrides: [
         appDatabaseProvider.overrideWithValue(database),
       ],
-      child: const FitAiApp(),
+      child: const FitAgentApp(),
     ),
   );
 }

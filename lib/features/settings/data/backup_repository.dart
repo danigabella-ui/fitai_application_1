@@ -6,6 +6,7 @@ import 'package:sembast/sembast.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/stores.dart';
+import 'settings_repository.dart';
 
 final backupRepositoryProvider = Provider<BackupRepository>((ref) {
   return BackupRepository(ref.watch(appDatabaseProvider));
@@ -24,7 +25,7 @@ class BackupData {
   /// Tárolónév -> (rekordkulcs -> adat)
   final Map<String, Map<String, Map<String, Object?>>> stores;
 
-  /// Beállítások (az API-kulcs nélkül).
+  /// Beállítások (a csak ezen a készüléken érvényesek nélkül).
   final Map<String, String> settings;
 
   int countOf(String storeName) => stores[storeName]?.length ?? 0;
@@ -32,8 +33,9 @@ class BackupData {
 
 /// Az összes adat mentése egy JSON-fájlba, és visszaállítása onnan.
 ///
-/// Az API-kulcs szándékosan NEM kerül a mentésbe, hogy a mentésfájl
-/// biztonságosan tárolható legyen pl. iCloudban.
+/// Az API-kulcs és a többi, csak ezen a készüléken érvényes beállítás
+/// szándékosan NEM kerül a mentésbe, így a mentésfájl biztonságosan
+/// tárolható pl. iCloudban.
 class BackupRepository {
   BackupRepository(this._database);
 
@@ -41,9 +43,6 @@ class BackupRepository {
 
   static const String _appId = 'fitai';
   static const int _formatVersion = 1;
-
-  /// Az API-kulcs kulcsa a beállítások között (ez kimarad a mentésből).
-  static const String _apiKeySetting = 'gemini_api_key';
 
   /// A mentett tárolók, név szerint.
   static final Map<String, StoreRef<String, Map<String, Object?>>> _stores = {
@@ -68,7 +67,8 @@ class BackupRepository {
     final settingsRecords = await Stores.settings.find(db);
     final settings = {
       for (final record in settingsRecords)
-        if (record.key != _apiKeySetting) record.key: record.value,
+        if (!SettingsRepository.deviceOnlyKeys.contains(record.key))
+          record.key: record.value,
     };
 
     return const JsonEncoder.withIndent('  ').convert({
@@ -123,7 +123,9 @@ class BackupRepository {
     final rawSettings = decoded['settings'];
     if (rawSettings is Map) {
       rawSettings.forEach((key, value) {
-        if (key is String && value is String && key != _apiKeySetting) {
+        if (key is String &&
+            value is String &&
+            !SettingsRepository.deviceOnlyKeys.contains(key)) {
           settings[key] = value;
         }
       });
@@ -138,7 +140,8 @@ class BackupRepository {
   }
 
   /// Visszaállítja a mentést: az appban lévő adatokat a mentés tartalmára
-  /// cseréli. Az API-kulcs érintetlen marad.
+  /// cseréli. A csak ezen a készüléken érvényes beállítások (pl. API-kulcs)
+  /// érintetlenek maradnak.
   Future<void> restore(BackupData backup) async {
     await _database.db.transaction((txn) async {
       for (final entry in _stores.entries) {
@@ -152,7 +155,14 @@ class BackupRepository {
 
       await Stores.settings.delete(
         txn,
-        finder: Finder(filter: Filter.notEquals(Field.key, _apiKeySetting)),
+        finder: Finder(
+          filter: Filter.not(
+            Filter.inList(
+              Field.key,
+              SettingsRepository.deviceOnlyKeys.toList(),
+            ),
+          ),
+        ),
       );
       for (final setting in backup.settings.entries) {
         await Stores.settings.record(setting.key).put(txn, setting.value);
