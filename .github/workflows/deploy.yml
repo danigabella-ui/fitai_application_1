@@ -1,0 +1,58 @@
+# Ez az automatizmus minden feltöltéskor lefordítja az appot webre,
+# és kiteszi a GitHub Pages-re, ahonnan a telefonod eléri.
+name: Közzététel GitHub Pages-re
+
+on:
+  push:
+    branches: [main, master]
+  # Kézi indítás az Actions fülön a "Run workflow" gombbal
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kód letöltése
+        uses: actions/checkout@v4
+
+      - name: Flutter telepítése
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Csomagok letöltése
+        run: flutter pub get
+
+      - name: Webes fordítás
+        # Az app a felhasznalonev.github.io/TAROLO-NEVE/ címen fut,
+        # ezért a tároló nevét automatikusan megadjuk útvonalként.
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+
+      - name: GitHub Pages előkészítése
+        uses: actions/configure-pages@v5
+
+      - name: Lefordított app feltöltése
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Közzététel
+        id: deployment
+        uses: actions/deploy-pages@v4
