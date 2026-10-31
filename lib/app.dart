@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'core/navigation/main_shell.dart';
+import 'core/navigation/app_gate.dart';
 import 'core/theme/app_theme.dart';
 
 /// Az app gyökere: itt dől el a cím, a nyelv, a téma és a kezdőképernyő.
@@ -25,7 +25,8 @@ class FitAgentApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       // Követi a telefon világos/sötét beállítását.
       themeMode: ThemeMode.system,
-      home: const MainShell(),
+      // Első indításkor az üdvözlőképernyő, utána a négy fül.
+      home: const AppGate(),
     );
   }
 }

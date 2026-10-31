@@ -19,6 +19,14 @@ class ProfileRepository {
   /// A profil egyetlen rekordként van tárolva ezen a kulcson.
   static const String _profileKey = 'main';
 
+  /// A mentett profil, vagy null, ha még soha nem volt profil elmentve.
+  /// Ebből tudja az app, hogy az első indítás képernyőjét kell-e mutatnia.
+  Future<UserProfile?> findProfile() async {
+    final map = await Stores.profile.record(_profileKey).get(_database.db);
+    if (map == null) return null;
+    return UserProfile.fromMap(map);
+  }
+
   Future<UserProfile> getProfile() async {
     final map = await Stores.profile.record(_profileKey).get(_database.db);
     if (map == null) return UserProfile.empty;

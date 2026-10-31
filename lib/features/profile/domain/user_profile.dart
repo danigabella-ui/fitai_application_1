@@ -67,6 +67,62 @@ class UserProfile {
 
   final ResponseStyle responseStyle;
 
+  /// Jelölő érték a [copyWith]-hez: "ezt a mezőt hagyd változatlanul".
+  /// Erre azért van szükség, hogy egy mezőt null-ra (üresre) is
+  /// lehessen állítani, ne csak új értékre.
+  static const Object _keep = Object();
+
+  /// Másolat a profilról, a megadott mezőkkel módosítva.
+  /// A meg nem adott mezők változatlanok maradnak; a null érték törli a mezőt.
+  UserProfile copyWith({
+    Object? birthYear = _keep,
+    Object? sex = _keep,
+    Object? heightCm = _keep,
+    Object? goal = _keep,
+    Object? goalDeadline = _keep,
+    Object? lifestyle = _keep,
+    Object? trainingExperience = _keep,
+    Object? trainingDaysPerWeek = _keep,
+    Object? equipment = _keep,
+    Object? dietaryNotes = _keep,
+    Object? injuries = _keep,
+    Object? cookingHabits = _keep,
+    Object? foodBudget = _keep,
+    Object? dailySchedule = _keep,
+    Object? calorieTarget = _keep,
+    Object? proteinTargetG = _keep,
+    Object? carbTargetG = _keep,
+    Object? fatTargetG = _keep,
+    ResponseStyle? responseStyle,
+  }) {
+    T? pick<T>(Object? value, T? current) =>
+        identical(value, _keep) ? current : value as T?;
+
+    return UserProfile(
+      birthYear: pick<int>(birthYear, this.birthYear),
+      sex: pick<Sex>(sex, this.sex),
+      heightCm: pick<double>(heightCm, this.heightCm),
+      goal: pick<String>(goal, this.goal),
+      goalDeadline: pick<DateTime>(goalDeadline, this.goalDeadline),
+      lifestyle: pick<String>(lifestyle, this.lifestyle),
+      trainingExperience:
+          pick<String>(trainingExperience, this.trainingExperience),
+      trainingDaysPerWeek:
+          pick<int>(trainingDaysPerWeek, this.trainingDaysPerWeek),
+      equipment: pick<String>(equipment, this.equipment),
+      dietaryNotes: pick<String>(dietaryNotes, this.dietaryNotes),
+      injuries: pick<String>(injuries, this.injuries),
+      cookingHabits: pick<String>(cookingHabits, this.cookingHabits),
+      foodBudget: pick<String>(foodBudget, this.foodBudget),
+      dailySchedule: pick<String>(dailySchedule, this.dailySchedule),
+      calorieTarget: pick<int>(calorieTarget, this.calorieTarget),
+      proteinTargetG: pick<int>(proteinTargetG, this.proteinTargetG),
+      carbTargetG: pick<int>(carbTargetG, this.carbTargetG),
+      fatTargetG: pick<int>(fatTargetG, this.fatTargetG),
+      responseStyle: responseStyle ?? this.responseStyle,
+    );
+  }
+
   Map<String, Object?> toMap() => {
         'birthYear': birthYear,
         'sex': sex?.name,

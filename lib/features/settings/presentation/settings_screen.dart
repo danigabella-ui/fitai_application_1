@@ -7,6 +7,7 @@ import '../../../shared/widgets/app_background.dart';
 import '../application/api_key_controller.dart';
 import '../application/backup_status_controller.dart';
 import '../data/backup_repository.dart';
+import 'restore_backup.dart';
 
 /// Beállítások: Gemini API-kulcs, valamint mentés és visszaállítás.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -133,60 +134,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) _showMessage('A mentés elkészült.');
   }
 
-  Future<void> _restoreBackup() async {
-    // A fájlválasztót azonnal, a gombnyomáson belül kell megnyitni.
-    final picking = pickTextFile();
-
-    String? text;
-    try {
-      text = await picking;
-    } catch (error) {
-      if (mounted) _showMessage('Nem sikerült megnyitni a fájlt: $error');
-      return;
-    }
-    if (text == null || !mounted) return;
-
-    final repository = ref.read(backupRepositoryProvider);
-
-    BackupData backup;
-    try {
-      backup = repository.parse(text);
-    } on FormatException catch (error) {
-      _showMessage(error.message);
-      return;
-    }
-
-    final date = backup.exportedAt == null
-        ? 'ismeretlen'
-        : huDateTime(backup.exportedAt!);
-    final hasProfile = backup.countOf('profile') > 0;
-
-    final confirmed = await _confirm(
-      title: 'Visszaállítod a mentést?',
-      message: 'Mentés dátuma: $date\n'
-          'Tartalma: ${hasProfile ? 'profil, ' : ''}'
-          '${backup.countOf('measurements')} mérés, '
-          '${backup.countOf('check_ins')} check-in, '
-          '${backup.countOf('chat_messages')} chat-üzenet.\n\n'
-          'A visszaállítás felülírja az appban jelenleg lévő összes adatot. '
-          'Az API-kulcs nem változik.',
-      confirmLabel: 'Visszaállítás',
+  void _restoreBackup() {
+    // A közös visszaállítás a gombnyomáson belül, azonnal megnyitja a
+    // fájlválasztót (az iPhone ezt így követeli meg).
+    restoreBackupFromFile(
+      context,
+      onBusyChanged: (busy) {
+        if (mounted) setState(() => _busy = busy);
+      },
     );
-    if (!confirmed || !mounted) return;
-
-    setState(() => _busy = true);
-    try {
-      await repository.restore(backup);
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _busy = false);
-      _showMessage('Nem sikerült a visszaállítás: $error');
-      return;
-    }
-    if (!mounted) return;
-
-    setState(() => _busy = false);
-    _showMessage('A mentés visszaállítva.');
   }
 
   // ---------------------------------------------------------------------------

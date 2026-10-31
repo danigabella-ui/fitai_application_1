@@ -7,19 +7,14 @@ import '../../features/checkin/presentation/checkin_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/application/backup_status_controller.dart';
 import '../../shared/widgets/app_background.dart';
+import 'selected_tab.dart';
 
 /// A fő keret: alul a navigációs sáv a négy füllel, felette az aktív képernyő.
-class MainShell extends ConsumerStatefulWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key});
 
-  @override
-  ConsumerState<MainShell> createState() => _MainShellState();
-}
-
-class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 0;
-
-  /// A fülek sorrendje itt és a navigációs sávban is ugyanaz kell legyen.
+  /// A fülek sorrendje itt, a navigációs sávban és az AppTabs-ban
+  /// is ugyanaz kell legyen.
   static const List<Widget> _screens = [
     ChatScreen(),
     CalendarScreen(),
@@ -28,7 +23,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = ref.watch(selectedTabProvider);
+
     // Ha régen volt mentés, egy kis pötty jelenik meg a Profil fülön.
     final backupOverdue = ref.watch(backupStatusProvider).maybeWhen(
           data: (status) => status.isOverdue,
@@ -43,16 +40,16 @@ class _MainShellState extends ConsumerState<MainShell> {
           children: [
             for (var i = 0; i < _screens.length; i++)
               _AnimatedTab(
-                active: i == _currentIndex,
+                active: i == currentIndex,
                 child: _screens[i],
               ),
           ],
         ),
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: currentIndex,
         onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
+          ref.read(selectedTabProvider.notifier).select(index);
         },
         destinations: [
           const NavigationDestination(
