@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-   import 'package:sembast/sembast.dart';
-   
+import 'package:sembast/sembast.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
