@@ -12,6 +12,9 @@ abstract final class Stores {
   /// Testsúly és mérőszalagos mérések, dátummal.
   static final measurements = stringMapStoreFactory.store('measurements');
 
+  /// Sérülésnapló: sérülések az állapotfrissítéseikkel.
+  static final injuries = stringMapStoreFactory.store('injuries');
+
   /// Reggeli check-inek, naponta egy.
   static final checkIns = stringMapStoreFactory.store('check_ins');
 

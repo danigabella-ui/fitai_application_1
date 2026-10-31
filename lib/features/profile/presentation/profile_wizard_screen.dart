@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -64,7 +63,7 @@ class _ProfileWizardScreenState extends ConsumerState<ProfileWizardScreen> {
       return;
     }
 
-    final changed = !mapEquals(_profile.toMap(), widget.initial.toMap()) ||
+    final changed = !_profile.sameAs(widget.initial) ||
         _draft.hasChanges(_profile, _sections.first);
     if (!changed) {
       Navigator.of(context).pop();
@@ -239,9 +238,9 @@ class _ProfileWizardScreenState extends ConsumerState<ProfileWizardScreen> {
         const SizedBox(height: 8),
         Text(
           missing.isEmpty
-              ? 'Mind a $total szakaszt kitöltötted. Bármikor módosíthatod '
+              ? 'Minden szakaszt kitöltöttél. Bármikor módosíthatod '
                   'őket a Profil fülön.'
-              : '$filledCount szakaszt töltöttél ki a $total-ból. '
+              : 'Kitöltött szakaszok: $filledCount / $total. '
                   'A kihagyottakat a Profil fülön bármikor pótolhatod:',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: scheme.onSurfaceVariant,
@@ -257,7 +256,15 @@ class _ProfileWizardScreenState extends ConsumerState<ProfileWizardScreen> {
             ],
           ),
         ],
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
+        Text(
+          'Ha van sérülésed vagy korlátozásod, a Profil fül Sérülések '
+          'nézetében rögzítheted, és ott követheted, hogyan javul.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 28),
         Card(
           margin: EdgeInsets.zero,
           child: Padding(

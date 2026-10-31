@@ -4,12 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/gradient_header.dart';
 import '../../settings/application/backup_status_controller.dart';
 import '../../settings/presentation/settings_screen.dart';
+import 'injuries_view.dart';
 import 'measurements_view.dart';
 import 'profile_details_view.dart';
 
-enum _ProfileView { details, measurements }
+enum _ProfileView { details, measurements, injuries }
 
-/// Profil fül: felül a kapcsoló („Adataim” és „Mérések”), alatta a
+/// Profil fül: felül a kapcsoló (Adataim, Mérések, Sérülések), alatta a
 /// kiválasztott nézet.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -56,6 +57,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
             child: SegmentedButton<_ProfileView>(
               expandedInsets: EdgeInsets.zero,
+              // Három gombnál a pipa nélkül fér el jobban a felirat.
+              showSelectedIcon: false,
               segments: const [
                 ButtonSegment(
                   value: _ProfileView.details,
@@ -64,6 +67,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ButtonSegment(
                   value: _ProfileView.measurements,
                   label: Text('Mérések'),
+                ),
+                ButtonSegment(
+                  value: _ProfileView.injuries,
+                  label: Text('Sérülések'),
                 ),
               ],
               selected: {_view},
@@ -75,6 +82,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: switch (_view) {
               _ProfileView.details => const ProfileDetailsView(),
               _ProfileView.measurements => const MeasurementsView(),
+              _ProfileView.injuries => const InjuriesView(),
             },
           ),
         ],

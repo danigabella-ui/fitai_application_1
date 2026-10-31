@@ -130,7 +130,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Kb. 5 perc, 8 rövid lépés. Bármelyiket '
+                              'Kb. 5 perc, 7 rövid lépés. Bármelyiket '
                               'kihagyhatod, és később is pótolhatod.',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: soft,

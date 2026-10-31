@@ -48,6 +48,7 @@ class BackupRepository {
   static final Map<String, StoreRef<String, Map<String, Object?>>> _stores = {
     'profile': Stores.profile,
     'measurements': Stores.measurements,
+    'injuries': Stores.injuries,
     'check_ins': Stores.checkIns,
     'chat_messages': Stores.chatMessages,
   };

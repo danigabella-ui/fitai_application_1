@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/files/file_service.dart';
 import '../../../core/utils/hu_dates.dart';
 import '../../../shared/widgets/dialogs.dart';
+import '../../profile/application/injuries_controller.dart';
 import '../../profile/application/measurements_controller.dart';
 import '../../profile/application/profile_controller.dart';
 import '../data/backup_repository.dart';
@@ -57,6 +58,7 @@ Future<bool> restoreBackupFromFile(
     message: 'Mentés dátuma: $date\n'
         'Tartalma: ${hasProfile ? 'profil, ' : ''}'
         '${backup.countOf('measurements')} mérés, '
+        '${backup.countOf('injuries')} sérülés, '
         '${backup.countOf('check_ins')} check-in, '
         '${backup.countOf('chat_messages')} chat-üzenet.\n\n'
         'A visszaállítás felülírja az appban jelenleg lévő összes adatot. '
@@ -78,6 +80,7 @@ Future<bool> restoreBackupFromFile(
   // A képernyők újraolvassák a visszaállított adatokat.
   container.invalidate(profileProvider);
   container.invalidate(measurementsProvider);
+  container.invalidate(injuriesProvider);
 
   showMessageWith(messenger, 'A mentés visszaállítva.');
   return true;
