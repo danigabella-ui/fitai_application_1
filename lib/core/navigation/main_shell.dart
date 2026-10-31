@@ -101,22 +101,22 @@ class _AnimatedTab extends StatelessWidget {
     final duration =
         reduceMotion ? Duration.zero : const Duration(milliseconds: 280);
 
+    // Fontos: a TickerMode a fül tartalmát állítja le, nem az áttűnést.
+    // Ha az áttűnést is körbevenné, a régi fül animációja megállna, és
+    // a szövege ott maradna a képernyőn.
     return IgnorePointer(
       ignoring: !active,
       child: ExcludeSemantics(
         excluding: !active,
-        child: TickerMode(
-          enabled: active,
-          child: AnimatedOpacity(
-            opacity: active ? 1 : 0,
+        child: AnimatedOpacity(
+          opacity: active ? 1 : 0,
+          duration: duration,
+          curve: Curves.easeOut,
+          child: AnimatedSlide(
+            offset: active ? Offset.zero : const Offset(0, 0.02),
             duration: duration,
-            curve: Curves.easeOut,
-            child: AnimatedSlide(
-              offset: active ? Offset.zero : const Offset(0, 0.02),
-              duration: duration,
-              curve: Curves.easeOutCubic,
-              child: child,
-            ),
+            curve: Curves.easeOutCubic,
+            child: TickerMode(enabled: active, child: child),
           ),
         ),
       ),
