@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/files/file_service.dart';
 import '../../../core/utils/hu_dates.dart';
 import '../../../shared/widgets/dialogs.dart';
+import '../../checkin/application/checkin_controller.dart';
 import '../../profile/application/injuries_controller.dart';
 import '../../profile/application/measurements_controller.dart';
 import '../../profile/application/profile_controller.dart';
@@ -81,6 +82,7 @@ Future<bool> restoreBackupFromFile(
   container.invalidate(profileProvider);
   container.invalidate(measurementsProvider);
   container.invalidate(injuriesProvider);
+  container.invalidate(checkInsProvider);
 
   showMessageWith(messenger, 'A mentés visszaállítva.');
   return true;

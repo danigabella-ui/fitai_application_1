@@ -24,6 +24,19 @@ class CheckInRepository {
     return map == null ? null : CheckIn.fromMap(map);
   }
 
+  /// A megadott napok check-injei a nap azonosítója szerint
+  /// (pl. "2026-10-31"). A ki nem töltött napok kimaradnak.
+  Future<Map<String, CheckIn>> getDays(Iterable<DateTime> days) async {
+    final keys = [for (final day in days) CheckIn.dayKeyOf(day)];
+    final records = await Stores.checkIns.find(
+      _database.db,
+      finder: Finder(filter: Filter.inList(Field.key, keys)),
+    );
+    return {
+      for (final record in records) record.key: CheckIn.fromMap(record.value),
+    };
+  }
+
   /// Mentés; ha aznapra már van check-in, felülírja.
   Future<void> save(CheckIn checkIn) async {
     await Stores.checkIns
